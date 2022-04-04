@@ -1,0 +1,48 @@
+version: '3.0'
+services:
+    database:
+        labels:
+            - traefik.enable=false
+
+    web:
+        labels:
+            - traefik.enable=true
+            - traefik.http.routers.mederic_project_https.tls=true
+            - traefik.http.routers.mederic_project_https.rule=Host(`mederic-project.local`)
+            - traefik.http.routers.mederic_project_https.entryPoints=websecure
+            - traefik.http.routers.mederic_project_http.rule=Host(`mederic-project.local`)
+            - traefik.http.routers.mederic_project_http.entryPoints=web
+        depends_on:
+            - database
+            - smtp
+
+    phpmyadmin:
+        image: phpmyadmin/phpmyadmin
+        depends_on:
+            - database
+        environment:
+            - PMA_HOST=database
+        labels:
+            - traefik.enable=true
+            - traefik.http.routers.mederic_project_phpmyadmin.rule=Host(`phpmyadmin.mederic-project.local`)
+            - traefik.http.routers.mederic_project_phpmyadmin.entryPoints=web
+
+    smtp:
+        image: djfarrelly/maildev:0.13.4
+        restart: always
+        labels:
+            - traefik.enable=true
+            - traefik.http.routers.mederic_project_maildev.rule=Host(`maildev.mederic-project.local`)
+            - traefik.http.routers.mederic_project_maildev.entryPoints=web
+            - traefik.http.services.mederic_project_maildev.loadbalancer.server.port=80
+    traefik:
+        image: traefik:v2.3
+        ports:
+            - 80:80
+            - 443:443
+            - 8080:8080
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - ./dockerfiles/traefik/traefik.yaml:/etc/traefik/traefik.yaml:ro
+            - ./dockerfiles/traefik/certs:/etc/certs/:ro
+            - ./dockerfiles/traefik/confs:/etc/traefik/confs/:ro
