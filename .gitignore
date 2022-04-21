@@ -1,6 +1,17 @@
+###> IDE ###
+/.idea/
+/nbproject/
+###< IDE ###
+
+###> Wordplate ###
 .idea
 .docker/dockerfiles/database/data/*
 .docker/dockerfiles/database/import/*
 node_modules
 vendor
 .env
+###< Wordplate ###
+
+###> Blade ###
+/storage/views/
+###< Blade ###
